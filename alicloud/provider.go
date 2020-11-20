@@ -29,6 +29,12 @@ import (
 func Provider() terraform.ResourceProvider {
 	return &schema.Provider{
 		Schema: map[string]*schema.Schema{
+			"source_ip": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				DefaultFunc: schema.EnvDefaultFunc("ALICLOUD_SOURCE_IP", os.Getenv("ALICLOUD_SOURCE_IP")),
+				Description: descriptions["source_ip"],
+			},
 			"access_key": {
 				Type:        schema.TypeString,
 				Optional:    true,
@@ -330,6 +336,7 @@ func Provider() terraform.ResourceProvider {
 			"alicloud_enhanced_nat_available_zones":          dataSourceAlicloudEnhancedNatAvailableZones(),
 			"alicloud_cen_route_services":                    dataSourceAlicloudCenRouteServices(),
 			"alicloud_kvstore_accounts":                      dataSourceAlicloudKvstoreAccounts(),
+			"alicloud_cms_group_metric_rules":                dataSourceAlicloudCmsGroupMetricRules(),
 		},
 		ResourcesMap: map[string]*schema.Resource{
 			"alicloud_instance":                           resourceAliyunInstance(),
@@ -470,6 +477,7 @@ func Provider() terraform.ResourceProvider {
 			"alicloud_fc_service":                          resourceAlicloudFCService(),
 			"alicloud_fc_function":                         resourceAlicloudFCFunction(),
 			"alicloud_fc_trigger":                          resourceAlicloudFCTrigger(),
+			"alicloud_fc_alias":                            resourceAlicloudFCAlias(),
 			"alicloud_fc_custom_domain":                    resourceAlicloudFCCustomDomain(),
 			"alicloud_fc_function_async_invoke_config":     resourceAlicloudFCFunctionAsyncInvokeConfig(),
 			"alicloud_vpn_gateway":                         resourceAliyunVpnGateway(),
@@ -594,6 +602,7 @@ func Provider() terraform.ResourceProvider {
 			"alicloud_cen_route_service":                   resourceAlicloudCenRouteService(),
 			"alicloud_kvstore_connection":                  resourceAlicloudKvstoreConnection(),
 			"alicloud_cms_alarm_contact_group":             resourceAlicloudCmsAlarmContactGroup(),
+			"alicloud_cms_group_metric_rule":               resourceAlicloudCmsGroupMetricRule(),
 		},
 
 		ConfigureFunc: providerConfigure,
@@ -624,6 +633,7 @@ func providerConfigure(d *schema.ResourceData) (interface{}, error) {
 	ecsRoleName := getProviderConfig(d.Get("ecs_role_name").(string), "ram_role_name")
 
 	config := &connectivity.Config{
+		SourceIp:             strings.TrimSpace(d.Get("source_ip").(string)),
 		AccessKey:            strings.TrimSpace(accessKey),
 		SecretKey:            strings.TrimSpace(secretKey),
 		EcsRoleName:          strings.TrimSpace(ecsRoleName),
@@ -791,6 +801,8 @@ var descriptions map[string]string
 
 func init() {
 	descriptions = map[string]string{
+		"source_ip": "The access key for API operations. You can retrieve this from the 'Security Management' section of the Alibaba Cloud console.",
+
 		"access_key": "The access key for API operations. You can retrieve this from the 'Security Management' section of the Alibaba Cloud console.",
 
 		"secret_key": "The secret key for API operations. You can retrieve this from the 'Security Management' section of the Alibaba Cloud console.",
